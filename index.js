@@ -9,10 +9,17 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', function(socket){
+  //console.log(socket);
+  console.log("entro alguien");
   socket.on('chat message', function(msg){
   	console.log('interceptando: ' + msg);
     io.emit('chat message', msg);
   });
+   socket.on('disconnect',function(socket){
+  	console.log("se fue alguien");
+  });
+
+
 });
 
 http.listen(port, function(){
