@@ -1,7 +1,22 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+  <script>
+    var OneSignal = window.OneSignal || [];
+  /*  OneSignal.push(function() {
+      OneSignal.init({
+        appId: "8dc3eec7-2330-4ecb-be62-9ee174ca04e0",
+        autoRegister: false,
+        notifyButton: {
+          enable: true,
+        },
+      });
+    });*/
+  </script>
+
+    <title>John Cena</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -15,7 +30,7 @@
     </style>
   </head>
   <body>
-    <input type="text" id="nick"></input>
+    <input type="text" id="nick"></input> <input type="button" value="Confirmar" onclick="confirmar()">
     <ul id="messages"></ul>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
@@ -24,23 +39,52 @@
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      $(function () {
-        var socket = io();
-        
-        $('form').submit(function(){
+      $('#nick').focus();
+      var socket;
 
+      function confirmar(){
+          var nickname=$('#nick').val()
+          nickname=nickname.replaceAll(" ","");
+            if(nickname.length>0){
+              if(nickname!=''){
+                  $('#nick').prop('disabled',true);
+                  socket= io();
+                  $('form').submit(function(){
+                    var message=$('#m').val();
+                    socket.emit('chat message',message,nickname);
+                    $('#m').val('');
+                    return false;
+                  
+                  });
 
-          socket.emit('chat message', $('#m').val(),$('#nick').val());
-          $('#m').val('');
+                  //mensajes especificos 
+                  socket.on('chat especific', function(msg,nick){
+                    $('#messages').append($('<li style="color:red;">').text(nick+" dice: "+msg));
+                    window.scrollTo(0, document.body.scrollHeight);
+                  });
+                  
+                  //mensajes publicos
+                  socket.on('chat message', function(msg,nick){
+                    alert(nick);
+                    $('#messages').append($('<li>').text(nick+" dicesss: "+msg));
+                    window.scrollTo(0, document.body.scrollHeight);
+                  });
+                }else{
+                  alert('es necesario elegir un Nick');
+                  $('#nick').focus();
+                }
+          }
+          else{
+            alert('es necesario elegir un Nick');
+              $('#nick').focus();
+          }
+      }
 
-          //socket.emit('send-nickname', );
-          return false;
-        });
-        socket.on('chat message', function(msg,nick){
-          $('#messages').append($('<li>').text(nick+" "+msg));
-          window.scrollTo(0, document.body.scrollHeight);
-        });
-      });
+      String.prototype.replaceAll = function(search, replacement) {
+        var target = this;
+        return target.split(search).join(replacement);
+      };
+
     </script>
   </body>
 </html>
