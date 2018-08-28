@@ -10,6 +10,16 @@ var myClient = new OneSignal.Client({
    app: { appAuthKey: 'ZDAyMDBiMzktMjhlYy00ZmNmLThkMjUtOTVhN2E1YTg5MjY1', appId: '8dc3eec7-2330-4ecb-be62-9ee174ca04e0' }    
 });    
 
+	
+	/*myClient.sendNotification(firstNotification, function (err, httpResponse,data) {    
+	   if (err) {    
+	       console.log('Something went wrong...');    
+	   } else {    
+	       console.log(data, httpResponse.statusCode);    
+	   }    
+	});    */
+
+
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -30,41 +40,37 @@ firstNotification.postBody["included_segments"] = ["Active Users"];
 
 
 io.on('connection', function(socket){
-	
-	/*myClient.sendNotification(firstNotification, function (err, httpResponse,data) {    
-	   if (err) {    
-	       console.log('Something went wrong...');    
-	   } else {    
-	       console.log(data, httpResponse.statusCode);    
-	   }    
-	});    */
 
-
-/*	let connectedUserId = socket.id;
-		connectedUserMap.set(socket.id, { status:'online'});
-    	socket.on('user_does_something', function(){
-        
-		});
-*/
-
-
-  	socket.broadcast.emit('user connected');
+    socket.on('room', function(room) {
+    	console.log("tengo adentro a:"+room )
+    	connectedUserMap.set(socket.id, { name:room,status:'online'});
+    	socket.join(room);
+    });
+  	
+  	
   	socket.on('chat message', function(msg,nickname){
-		console.log('me hablo '+nickname);
-  		connectedUserMap.set(socket.id, { name:nickname,status:'online'});
-    	last_user=nickname;
-    	
-    	if(nickname=='wizzac'){
-    		io.emit('chat message',msg,last_user);
-    	}else{
-    		io.emit('chat especific',msg,last_user);
-    	}
+    	io.emit('chat message',msg,nickname);
+		//console.log('me hablo '+nickname);
+  		//console.log('interceptando: ' + msg);    	
 
-  		console.log('interceptando: ' + msg);
-  		console.log(connectedUserMap);
+
+  		console.log(socket.rooms);
 
   	});
 
+	socket.on('chat specific', function(msg,sender,receptor){
+
+    	socket.join(receptor);
+
+		console.log("receptor: " +receptor)
+    	console.log('me hablo en secreto '+sender);
+  		console.log('interceptando mensaje secreto : ' + msg);
+
+		io.to(receptor).emit('whisper',msg,sender);
+    	//socket.leave(receptor);
+
+		
+  	});
 
 
    socket.on('disconnect',function(socket1){
@@ -72,9 +78,6 @@ io.on('connection', function(socket){
   	if(socket.id!='undefined'){
   		connectedUserMap.set(socket.id,{});
   	}
-
-
-
   });
 
 

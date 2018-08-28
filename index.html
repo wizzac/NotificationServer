@@ -48,27 +48,40 @@
             if(nickname.length>0){
               if(nickname!=''){
                   $('#nick').prop('disabled',true);
-                  socket= io();
+                  socket= io()  
                   $('form').submit(function(){
                     var message=$('#m').val();
-                    socket.emit('chat message',message,nickname);
+                    if(message[0]=='/'){
+                      message=message.replace('/','');
+                      message=message.split(" ");
+                      var to=message[0]
+                      message=message.splice(1,message.length-1);
+                      socket.emit('chat specific',message,nickname,to);
+                    }else{
+                      socket.emit('chat message',message,nickname);
+                    }
                     $('#m').val('');
                     return false;
-                  
                   });
+                 
+                  //tratemos de crear un room 
+                  socket.on('connect',function(){
+                    socket.emit('room', nickname);
+                  })
 
                   //mensajes especificos 
-                  socket.on('chat especific', function(msg,nick){
-                    $('#messages').append($('<li style="color:red;">').text(nick+" dice: "+msg));
-                    window.scrollTo(0, document.body.scrollHeight);
-                  });
+                    socket.on('whisper',function(msg,nick){
+                      $('#messages').append($('<li style="color:red;">').text(nick+" whispers: "+msg));
+                      window.scrollTo(0, document.body.scrollHeight);
+                    });
+                
+                    //mensajes publicos
+                    socket.on('chat message', function(msg,nick){
+                      $('#messages').append($('<li>').text(nick+" dicesss: "+msg));
+                      window.scrollTo(0, document.body.scrollHeight);
+                    });
+                 
                   
-                  //mensajes publicos
-                  socket.on('chat message', function(msg,nick){
-                    alert(nick);
-                    $('#messages').append($('<li>').text(nick+" dicesss: "+msg));
-                    window.scrollTo(0, document.body.scrollHeight);
-                  });
                 }else{
                   alert('es necesario elegir un Nick');
                   $('#nick').focus();
